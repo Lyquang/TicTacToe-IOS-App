@@ -21,6 +21,15 @@
 
 import UIKit
 
+extension Player {
+    var color: UIColor {
+        switch self {
+        case .cross: return UIColor(red: 1, green: 0.23, blue: 0.19, alpha: 1)
+        case .nought: return UIColor(white: 0.9, alpha: 1)
+        }
+    }
+}
+
 final class GameViewController: UIViewController {
 
     // MARK: - Hằng số
@@ -177,6 +186,7 @@ final class GameViewController: UIViewController {
 
     /// True khi game đã kết thúc — chặn input người dùng.
     private var gameEnded = false
+    private var roundID = UUID()
 
     /// Flag đảm bảo chỉ center board 1 lần duy nhất.
     private var didCenter = false
@@ -252,7 +262,7 @@ final class GameViewController: UIViewController {
             hudView.topAnchor.constraint(equalTo: view.topAnchor),
             hudView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             hudView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            hudView.heightAnchor.constraint(equalToConstant: 100),
+            hudView.bottomAnchor.constraint(equalTo: safeTop, constant: 66),
 
             // Đường kẻ: ngay dưới HUD, cao 1pt
             hudSeparator.topAnchor.constraint(equalTo: hudView.bottomAnchor),
@@ -319,14 +329,13 @@ final class GameViewController: UIViewController {
 
         viewModel.onMovePlaced = { [weak self] coordinate, winLine in
             guard let self = self else { return }
-            self.boardView.board = self.viewModel.board  // sync dữ liệu
-            if let line = winLine {
-                self.boardView.winningLine = line
-            }
+            self.boardView.update(board: self.viewModel.board, winningLine: winLine)
             self.boardView.animatePlacement(at: coordinate)
             if let line = winLine {
                 // Delay 150ms trước khi flash đường thắng
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                let roundID = self.roundID
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                    guard let self = self, self.roundID == roundID else { return }
                     self.boardView.animateWin(line: line)
                 }
                 // DispatchQueue.main = Main Thread — mọi UI update PHẢI chạy trên main thread
@@ -338,7 +347,10 @@ final class GameViewController: UIViewController {
             guard let self = self else { return }
             self.gameEnded = true
             self.updateHUD()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            let roundID = self.roundID
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                guard let self = self, self.roundID == roundID,
+                      self.presentedViewController == nil else { return }
                 self.showResultAlert(result: result)
             }
         }
@@ -359,6 +371,7 @@ final class GameViewController: UIViewController {
         let point = gesture.location(in: boardView)
         // location(in:) = vị trí tap trong hệ tọa độ của boardView
         
+        guard boardView.bounds.contains(point) else { return }
         let coordinate = boardView.coordinate(for: point)
         viewModel.place(at: coordinate)  // ViewModel xử lý logic
         updateHUD()                      // View cập nhật giao diện
@@ -366,10 +379,10 @@ final class GameViewController: UIViewController {
 
     @objc private func resetGame() {
         gameEnded = false
+        roundID = UUID()
         viewModel.resetGame()        // ViewModel reset logic
-        boardView.board       = [:]  // View reset dữ liệu hiển thị
-        boardView.winningLine = nil
-        boardView.setNeedsDisplay()  // yêu cầu vẽ lại
+        boardView.update(board: [:], winningLine: nil)
+        boardView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         updateHUD()
     }
 
