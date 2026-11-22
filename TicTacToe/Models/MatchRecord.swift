@@ -16,12 +16,16 @@ import Foundation
 // ─────────────────────────────────────────────────────────────────
 
 /// Kết quả của một ván đấu.
+// rawValue là chuỗi lưu/hiển thị; enum giúp tránh viết nhầm chuỗi ở logic game.
+// draw được giữ trong model nhưng ViewModel hiện không tự tạo kết quả hòa.
 enum MatchResult: String, Codable {
     case crossWin  = "X Wins"   // rawValue = "X Wins" (chuỗi lưu vào JSON)
     case noughtWin = "O Wins"
     case draw      = "Draw"
 
     /// Chuỗi hiển thị có emoji — dùng cho UI.
+    // Getter này vẫn còn để tương thích, nhưng giao diện hiện dùng rawValue.
+    // switch trả chuỗi tương ứng case; đây không phải dữ liệu lưu bổ sung.
     var emoji: String {
         switch self {
         case .crossWin:  return "🔴 X Wins"
@@ -45,9 +49,11 @@ enum MatchResult: String, Codable {
 /// Thông tin một ván đấu đã kết thúc.
 struct MatchRecord: Codable, Identifiable {
     
-    // UUID = Universally Unique Identifier — chuỗi 128-bit duy nhất
+    // UUID = Universally Unique Identifier — định danh 128-bit, thường hiển thị như chuỗi
     // Ví dụ: "550e8400-e29b-41d4-a716-446655440000"
-    // Dùng để phân biệt từng record, không bao giờ trùng nhau.
+    // Dùng để phân biệt record; xác suất trùng UUID ngẫu nhiên là cực thấp.
+    // Đây không phải số thứ tự trận hiển thị trên danh sách.
+    // Identifiable yêu cầu id để bên sử dụng có cách nhận diện từng bản ghi.
     let id: UUID
     
     // Date = kiểu ngày giờ của Swift (tương tự Date object trong JS)
@@ -68,6 +74,10 @@ struct MatchRecord: Codable, Identifiable {
     //
     // Kết quả: Gọi đơn giản hơn: MatchRecord(result: .crossWin, totalMoves: 10)
     // ─────────────────────────────────────────────────────────────
+    // `self.result = result`: vế trái là thuộc tính, vế phải là tham số cùng tên.
+    // Date() ghi thời điểm kết thúc; định dạng ngày giờ đẹp thuộc nhiệm vụ View.
+    // Codable tự sinh cách chuyển các thuộc tính lưu trữ sang/về dữ liệu;
+    // computed property như MatchResult.emoji không được encode thành một trường riêng.
     init(result: MatchResult, totalMoves: Int) {
         self.id         = UUID()    // tạo UUID ngẫu nhiên
         self.date       = Date()    // lấy thời điểm hiện tại

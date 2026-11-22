@@ -21,6 +21,9 @@
 
 import UIKit
 
+// extension thêm khả năng cho một kiểu đã có, không sửa phần định nghĩa gốc.
+// Màu sắc nằm ở tầng View (UIKit); Player trong Model chỉ giữ danh tính X/O.
+// switch phải xử lý mọi case; nếu thêm người chơi mới compiler sẽ yêu cầu cập nhật.
 extension Player {
     var color: UIColor {
         switch self {
@@ -30,11 +33,16 @@ extension Player {
     }
 }
 
+// UIViewController quản lý một màn hình: tạo view, nhận thao tác và điều phối.
+// Nó giao luật chơi cho ViewModel và giao việc vẽ cho InfiniteBoardView.
+// Đây là màn hình thực tế được SceneDelegate đặt làm rootViewController.
 final class GameViewController: UIViewController {
 
     // MARK: - Hằng số
 
     /// Canvas 6000×6000pt — đủ lớn để chơi hàng trăm nước.
+    // private let: tham chiếu/giá trị này được gán một lần và không lộ ra bên ngoài.
+    // Dùng `let viewModel` vẫn gọi được place/reset: let không đóng băng đối tượng class.
     private let canvasSize: CGFloat = 6000
 
     /// Kích thước mỗi ô cờ (đồng bộ với InfiniteBoardView).
@@ -72,8 +80,15 @@ final class GameViewController: UIViewController {
     // ─────────────────────────────────────────────────────────────
 
     /// ScrollView bao quanh toàn bộ bàn cờ — cho phép pan & zoom.
+    // lazy trì hoãn khởi tạo tới lần truy cập đầu, thuận tiện khi cấu hình cần self.
+    // `{ ... }()` là closure được gọi để tạo giá trị: tạo view → cấu hình → return.
+    // UIScrollView chứa canvas lớn hơn màn hình: contentSize là kích thước nội dung,
+    // bounds.size là kích thước vùng đang nhìn và contentOffset là vị trí đang cuộn.
+    // delegate nhận các câu hỏi/sự kiện từ scroll view; self sẽ cung cấp view cần zoom.
     private lazy var scrollView: UIScrollView = {
         let sv = UIScrollView()
+        // Tắt chuyển autoresizing mask thành constraint để dùng Auto Layout tự khai báo.
+        // Các UIView được bố trí bằng anchor trong setupUI đều dùng lựa chọn này.
         sv.translatesAutoresizingMaskIntoConstraints = false
         // ↑ BẮT BUỘC đặt false khi dùng Auto Layout (constraint-based layout)
         //   Nếu true: iOS tự tạo constraint từ frame → xung đột
@@ -92,6 +107,8 @@ final class GameViewController: UIViewController {
     }()
 
     /// Bàn cờ vô hạn — subview của scrollView.
+    // Khác scrollView được Auto Layout bố trí, canvas con có frame cố định.
+    // CGRect(origin:size:) nhận CGPoint vị trí và CGSize kích thước; .zero là (0,0).
     private lazy var boardView: InfiniteBoardView = {
         // CGRect(origin:size:) = hình chữ nhật với điểm gốc và kích thước
         let bv = InfiniteBoardView(frame: CGRect(origin: .zero,
@@ -121,6 +138,8 @@ final class GameViewController: UIViewController {
     }()
 
     /// Label hiển thị "X's Turn" hoặc "O's Turn".
+    // UILabel hiển thị chữ; UIFont chọn kích thước/độ đậm chữ.
+    // turnIndicator là dấu màu, turnLabel là lượt và scoreLabel là điểm trong phiên.
     private lazy var turnLabel: UILabel = {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
@@ -142,6 +161,10 @@ final class GameViewController: UIViewController {
         return l
     }()
 
+    // UIButton phát sự kiện khi chạm. setTitle/setImage cấu hình trạng thái .normal.
+    // UIImage(systemName:) lấy biểu tượng SF Symbols, trả Optional nếu tên không tồn tại.
+    // `titleLabel?.font` chỉ gán font khi titleLabel có giá trị, tránh ép mở Optional.
+    // contentEdgeInsets tạo khoảng đệm trong nút; tintColor tô biểu tượng/chữ của nút.
     private lazy var historyButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.translatesAutoresizingMaskIntoConstraints = false
@@ -155,6 +178,9 @@ final class GameViewController: UIViewController {
         btn.layer.cornerRadius = 14
         btn.contentEdgeInsets = UIEdgeInsets(top: 7, left: 12, bottom: 7, right: 12)
         // UIEdgeInsets = padding bên trong button
+        // Target–action: nút gửi sự kiện touchUpInside tới openHistory của self.
+        // #selector tạo tham chiếu phương thức cho cơ chế runtime Objective-C của UIKit.
+        // Vì vậy hàm nhận sự kiện bên dưới được đánh dấu @objc.
         btn.addTarget(self, action: #selector(openHistory), for: .touchUpInside)
         // addTarget: khi chạm (touchUpInside) → gọi hàm openHistory
         // `#selector(openHistory)` = tham chiếu đến hàm openHistory (Objective-C runtime)
@@ -186,6 +212,7 @@ final class GameViewController: UIViewController {
 
     /// True khi game đã kết thúc — chặn input người dùng.
     private var gameEnded = false
+    // roundID là UUID riêng của ván: dùng để bỏ callback trễ thuộc ván đã reset.
     private var roundID = UUID()
 
     /// Flag đảm bảo chỉ center board 1 lần duy nhất.
@@ -193,6 +220,8 @@ final class GameViewController: UIViewController {
 
     // MARK: - Vòng đời ViewController
 
+    // UIKit gọi viewDidLoad một lần cho mỗi lần view được tải, phù hợp để tạo UI
+    // và gán callback. Không nên tự gọi hàm vòng đời này để làm mới màn hình.
     override func viewDidLoad() {
         super.viewDidLoad()  // luôn gọi super trước
         // Thứ tự: viewDidLoad → (layout) → viewDidLayoutSubviews → viewDidAppear
@@ -201,6 +230,8 @@ final class GameViewController: UIViewController {
         bindViewModel() // kết nối ViewModel với View
     }
 
+    // Có thể được gọi nhiều lần sau bố trí/đổi kích thước. Lúc này bounds đã có số đo.
+    // didCenter giúp căn giữa một lần, tránh đang cuộn mà bị kéo lại giữa bàn.
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         // Hàm này được gọi sau khi Auto Layout hoàn tất tính toán kích thước.
@@ -218,6 +249,8 @@ final class GameViewController: UIViewController {
         didCenter = true
 
         // Scroll đến giữa canvas để người dùng bắt đầu từ trung tâm bàn cờ
+        // Căn giữa viewport trong canvas: (kích thước canvas - viewport) / 2.
+        // Điều này áp dụng lần đầu ở zoom mặc định 1.0.
         let offsetX = (canvasSize - scrollView.bounds.width)  / 2
         let offsetY = (canvasSize - scrollView.bounds.height) / 2
         scrollView.setContentOffset(CGPoint(x: offsetX, y: offsetY), animated: false)
@@ -225,6 +258,8 @@ final class GameViewController: UIViewController {
         // Không animation (animated: false) để tức thì, không giật
     }
 
+    // addSubview tạo cây giao diện; view được thêm sau nằm phía trên view trước.
+    // HUD là thanh lượt/điểm/nút; separator là đường phân cách khỏi bàn cờ.
     private func setupUI() {
         view.backgroundColor = UIColor(red: 0.11, green: 0.11, blue: 0.18, alpha: 1)
 
@@ -257,6 +292,12 @@ final class GameViewController: UIViewController {
         let safeTop = view.safeAreaLayoutGuide.topAnchor
         // safeAreaLayoutGuide = vùng an toàn (tránh notch, Dynamic Island, status bar)
 
+        // Auto Layout biểu diễn quan hệ giữa các cạnh, không gán x/y tuyệt đối:
+        // leading/trailing: đầu/cuối theo hướng chữ; top/bottom: trên/dưới;
+        // centerY: tâm dọc; width/height: kích thước. constant là khoảng cách theo point.
+        // Safe Area tránh vùng status bar/notch; activate bật cả mảng constraint.
+        // Ví dụ leading +16 đẩy vào từ trái; trailing -16 lùi vào từ phải.
+        // intrinsicContentSize giúp UILabel/UIButton tự có kích thước theo nội dung.
         NSLayoutConstraint.activate([
             // HUD: từ topAnchor → chiều cao 100pt
             hudView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -300,6 +341,8 @@ final class GameViewController: UIViewController {
         ])
     }
 
+    // Gesture recognizer nhận diện cử chỉ (tap) từ chuỗi sự kiện chạm cấp thấp.
+    // boardTapped(_:) có một tham số; dấu : trong selector thể hiện điều đó.
     private func setupGestures() {
         // UITapGestureRecognizer nhận diện cử chỉ chạm (tap)
         let tap = UITapGestureRecognizer(target: self,
@@ -311,6 +354,11 @@ final class GameViewController: UIViewController {
 
     // MARK: - Kết nối ViewModel với View (Binding)
 
+    // Binding ở đây là tự gán closure, không phải @Binding của SwiftUI.
+    // ARC quản lý vòng đời đối tượng bằng số tham chiếu mạnh. Nếu controller giữ
+    // ViewModel và callback trong ViewModel giữ mạnh controller thì tạo vòng giữ nhau.
+    // [weak self] làm closure giữ tham chiếu yếu; self có thể nil nếu màn hình đã đóng.
+    // guard let self mở Optional và giữ đối tượng sống trong lần callback đang chạy.
     private func bindViewModel() {
         // ─────────────────────────────────────────────────────────
         // 📖 KHÁI NIỆM: [weak self] trong closure
@@ -333,6 +381,9 @@ final class GameViewController: UIViewController {
             self.boardView.animatePlacement(at: coordinate)
             if let line = winLine {
                 // Delay 150ms trước khi flash đường thắng
+                // Lưu mã ván lúc lên lịch. asyncAfter không chặn UI, chỉ hẹn chạy sau.
+                // Main queue dùng cho cập nhật giao diện. Tới lúc chạy, kiểm tra roundID
+                // để không hiện hiệu ứng cũ trên một ván mới đã reset.
                 let roundID = self.roundID
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
                     guard let self = self, self.roundID == roundID else { return }
@@ -343,6 +394,8 @@ final class GameViewController: UIViewController {
             }
         }
 
+        // Callback kết thúc cập nhật HUD ngay, rồi đợi 0.8 giây cho hiệu ứng thắng.
+        // Nếu đã chuyển ván hoặc đang có một màn hình/modal khác, bỏ hộp thoại trễ.
         viewModel.onGameEnded = { [weak self] result in
             guard let self = self else { return }
             self.gameEnded = true
@@ -364,6 +417,9 @@ final class GameViewController: UIViewController {
     // MARK: - Actions (Hành động người dùng)
 
     /// Được gọi khi người dùng chạm vào bàn cờ.
+    // @objc cho phép target–action của UIKit gọi phương thức Swift này.
+    // Lấy điểm trong hệ tọa độ boardView, kiểm tra nằm trong canvas, đổi thành ô,
+    // nhờ ViewModel thử đặt. ViewModel vẫn tự kiểm tra hợp lệ độc lập với View.
     @objc private func boardTapped(_ gesture: UITapGestureRecognizer) {
         // `@objc` bắt buộc vì `#selector` dùng Objective-C runtime
         guard !gameEnded else { return }  // chặn input khi game kết thúc
@@ -382,10 +438,15 @@ final class GameViewController: UIViewController {
         roundID = UUID()
         viewModel.resetGame()        // ViewModel reset logic
         boardView.update(board: [:], winningLine: nil)
+        // forEach chạy closure cho từng layer con; $0 là tham số đầu viết tắt.
+        // Dọn hiệu ứng tạm, còn nội dung tile được yêu cầu vẽ lại bởi update.
         boardView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         updateHUD()
     }
 
+    // Truyền cùng ViewModel vào History để đọc/xóa cùng kho dữ liệu.
+    // UINavigationController bọc màn hình để có navigation bar với nút đóng/xóa.
+    // present mở modal trên màn hình hiện tại; .pageSheet là giao diện dạng tấm trượt.
     @objc private func openHistory() {
         // Tạo HistoryViewController và bọc trong NavigationController
         let vc  = HistoryViewController(viewModel: viewModel)
@@ -397,6 +458,9 @@ final class GameViewController: UIViewController {
 
         // `if #available(iOS 15.0, *)` = kiểm tra phiên bản iOS
         // Đây là cách Swift xử lý API mới mà thiết bị cũ không có
+        // Kiểm tra phiên bản lúc chạy: chỉ dùng API sheet mới trên iOS 15 trở lên.
+        // * cho biết các nền tảng khác không bị giới hạn bởi điều kiện iOS này.
+        // detents là các mức cao được phép: medium (một phần) và large (gần toàn màn hình).
         if #available(iOS 15.0, *) {
             if let sheet = nav.sheetPresentationController {
                 sheet.detents = [.medium(), .large()]
@@ -409,6 +473,8 @@ final class GameViewController: UIViewController {
 
     // MARK: - Cập nhật HUD
 
+    // UIView.animate nhận closure mô tả giá trị cuối; UIKit nội suy thay đổi hỗ trợ.
+    // `"\(biểu_thức)"` là string interpolation: chèn giá trị vào một chuỗi.
     private func updateHUD() {
         if gameEnded {
             turnLabel.text = "Game Over"
@@ -431,6 +497,9 @@ final class GameViewController: UIViewController {
 
     // MARK: - Alert kết quả
 
+    // UIAlertController hiển thị kết quả. rawValue của MatchResult là chữ X/O Wins.
+    // UIAlertAction là nút trong hộp thoại; closure chạy khi người dùng chọn nút.
+    // `_` trong closure nghĩa bỏ qua tham số action vì không cần dùng nó.
     private func showResultAlert(result: MatchResult) {
         // UIAlertController = hộp thoại thông báo của iOS
         let alert = UIAlertController(
@@ -459,6 +528,9 @@ final class GameViewController: UIViewController {
 // Lý do: giữ code có tổ chức, nhóm code theo chức năng
 // ─────────────────────────────────────────────────────────────────
 
+// Extension này khai báo controller tuân thủ UIScrollViewDelegate.
+// Khi pinch, scroll view hỏi view nào được phóng/thu; trả boardView để zoom canvas.
+// Giá trị UIView? cho phép delegate khác trả nil nếu không hỗ trợ zoom.
 extension GameViewController: UIScrollViewDelegate {
     /// Trả về view nào sẽ bị scale khi zoom — chính là bàn cờ.
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
