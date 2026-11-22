@@ -434,7 +434,7 @@ final class GameViewController: UIViewController {
     private func showResultAlert(result: MatchResult) {
         // UIAlertController = hộp thoại thông báo của iOS
         let alert = UIAlertController(
-            title: result.emoji,
+            title: result.rawValue,
             message: "Total moves: \(viewModel.totalMoves)",
             preferredStyle: .alert)  // .alert = popup giữa màn hình
 

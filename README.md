@@ -2,6 +2,15 @@
 
 A local, two-player iOS game built with Swift and UIKit. This project extends [CodeWithCal's TicTacToe starter](https://github.com/codeWithCal/TicTacToeSwiftXcode) into a five-in-a-row game with MVVM, a tiled board, and persistent match summaries.
 
+## Screenshots
+
+| Play on the tiled board | Five in a row | Local match history |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/gameplay.png" alt="An in-progress game with red X and off-white O pieces on the dark tiled board" width="250"> | <img src="docs/screenshots/victory.png" alt="Five consecutive X pieces highlighted in gold after a win" width="250"> | <img src="docs/screenshots/history.png" alt="Local match history showing winners, move counts and completion dates" width="250"> |
+| Pan, pinch to zoom, and take turns. | Winning cells light up in gold. | Completed results stay on the device. |
+
+Captured from the app on an iPhone 17 Pro Simulator using staged sample matches. The victory screenshot shows the board after the result dialog is dismissed.
+
 ## Features
 
 - **Five-in-a-row rules:** X starts, players alternate, and five or more consecutive pieces win horizontally, vertically, or along either diagonal. Occupied cells and moves after a win are rejected.

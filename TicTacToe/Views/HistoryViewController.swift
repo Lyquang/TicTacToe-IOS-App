@@ -202,7 +202,7 @@ private final class HistoryCell: UITableViewCell {
 
     func configure(with record: MatchRecord, rank: Int) {
         rankLabel.text  = "#\(rank)"
-        resultLabel.text = record.result.emoji
+        resultLabel.text = record.result.rawValue
         movesLabel.text  = "· \(record.totalMoves) moves"
 
         let formatter = DateFormatter()
