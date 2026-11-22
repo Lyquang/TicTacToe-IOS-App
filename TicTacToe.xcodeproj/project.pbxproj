@@ -13,6 +13,14 @@
 		2E74019226B36E37006688B8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2E74019026B36E37006688B8 /* Main.storyboard */; };
 		2E74019426B36E3B006688B8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E74019326B36E3B006688B8 /* Assets.xcassets */; };
 		2E74019726B36E3B006688B8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2E74019526B36E3B006688B8 /* LaunchScreen.storyboard */; };
+
+		AA100002AABB000000000002 /* Coordinate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100001AABB000000000001 /* Coordinate.swift */; };
+		AA100004AABB000000000004 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100003AABB000000000003 /* Player.swift */; };
+		AA100006AABB000000000006 /* MatchRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100005AABB000000000005 /* MatchRecord.swift */; };
+		AA100008AABB000000000008 /* GameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100007AABB000000000007 /* GameViewModel.swift */; };
+		AA100010AABB000000000010 /* InfiniteBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100009AABB000000000009 /* InfiniteBoardView.swift */; };
+		AA100012AABB000000000012 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100011AABB000000000011 /* GameViewController.swift */; };
+		AA100014AABB000000000014 /* HistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013AABB000000000013 /* HistoryViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +32,14 @@
 		2E74019326B36E3B006688B8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2E74019626B36E3B006688B8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		2E74019826B36E3B006688B8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+
+		AA100001AABB000000000001 /* Coordinate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coordinate.swift; sourceTree = "<group>"; };
+		AA100003AABB000000000003 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		AA100005AABB000000000005 /* MatchRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchRecord.swift; sourceTree = "<group>"; };
+		AA100007AABB000000000007 /* GameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewModel.swift; sourceTree = "<group>"; };
+		AA100009AABB000000000009 /* InfiniteBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteBoardView.swift; sourceTree = "<group>"; };
+		AA100011AABB000000000011 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		AA100013AABB000000000013 /* HistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +72,9 @@
 		2E74018926B36E37006688B8 /* TicTacToe */ = {
 			isa = PBXGroup;
 			children = (
+				AA100015AABB000000000015 /* Models */,
+				AA100016AABB000000000016 /* ViewModels */,
+				AA100017AABB000000000017 /* Views */,
 				2E74018A26B36E37006688B8 /* AppDelegate.swift */,
 				2E74018C26B36E37006688B8 /* SceneDelegate.swift */,
 				2E74018E26B36E37006688B8 /* ViewController.swift */,
@@ -65,6 +84,35 @@
 				2E74019826B36E3B006688B8 /* Info.plist */,
 			);
 			path = TicTacToe;
+			sourceTree = "<group>";
+		};
+
+		AA100015AABB000000000015 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA100001AABB000000000001 /* Coordinate.swift */,
+				AA100003AABB000000000003 /* Player.swift */,
+				AA100005AABB000000000005 /* MatchRecord.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA100016AABB000000000016 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				AA100007AABB000000000007 /* GameViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AA100017AABB000000000017 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA100009AABB000000000009 /* InfiniteBoardView.swift */,
+				AA100011AABB000000000011 /* GameViewController.swift */,
+				AA100013AABB000000000013 /* HistoryViewController.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -138,6 +186,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				2E74018F26B36E37006688B8 /* ViewController.swift in Sources */,
+				AA100002AABB000000000002 /* Coordinate.swift in Sources */,
+				AA100004AABB000000000004 /* Player.swift in Sources */,
+				AA100006AABB000000000006 /* MatchRecord.swift in Sources */,
+				AA100008AABB000000000008 /* GameViewModel.swift in Sources */,
+				AA100010AABB000000000010 /* InfiniteBoardView.swift in Sources */,
+				AA100012AABB000000000012 /* GameViewController.swift in Sources */,
+				AA100014AABB000000000014 /* HistoryViewController.swift in Sources */,
 				2E74018B26B36E37006688B8 /* AppDelegate.swift in Sources */,
 				2E74018D26B36E37006688B8 /* SceneDelegate.swift in Sources */,
 			);
